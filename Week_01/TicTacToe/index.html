@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <style>
+      #box-wrap {
+        width: 100%;
+      }
+      .cell {
+        display: inline-block;
+        width: 100px;
+        height: 100px;
+        vertical-align: bottom;
+        line-height: 100px;
+        border: 1px solid #fff;
+        text-align: center;
+        background: green;
+        font-size: 50px;
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+      <div id="win-tip"></div>
+      <div id="box-wrap"></div>
+    </div>
+
+  </body>
+  <script>
+    let cellsList = [
+      [
+        0, 0, 0
+      ],
+      [
+        0, 0, 0
+      ],
+      [
+        0, 0, 0
+      ]
+    ]
+    const COUNT = 2 + 1
+    // 1是⭕️，2=❌
+    let current = 2
+
+    function move(i, j) {
+      let r = false
+      r = userMove(i, j, current, cellsList)
+      if (r) {
+        return // 用户赢了
+      };
+      autoMove(COUNT - current, cellsList)
+
+      // if (p = willWin(current, cellsList)) {
+      // const which = current === 2 ? '❌' : current === 1 ? '⭕️' : ''
+      // tip.innerText = `落子位置，${p}后,${which}将会赢！`
+      // }
+    }
+    // 用户下棋
+    function userMove(i, j, current, cellsList) {
+      let tip = document.getElementById('win-tip')
+      cellsList[i][j] = current
+      show()
+      if (check(i, j, current, cellsList)) {
+        const which = current === 2 ? '❌' : current === 1 ? '⭕️' : ''
+        tip.innerText = `${which}赢了！`
+        return true
+      }
+    }
+    // 电脑下棋
+    function autoMove(current, cellsList) {
+      const which = current === 2 ? '❌' : current === 1 ? '⭕️' : ''
+      let tip = document.getElementById('win-tip')
+      let r = bastChoice(current, cellsList)
+
+      if (r.point) {
+        cellsList[r.point[0]][r.point[1]] = current
+        show(cellsList)
+      }
+      if (! r.point) {
+        tip.innerText = '平局了'
+        return true
+      }
+      if (check(r.point[0], r.point[1], current, cellsList)) {
+        const which = current === 2 ? '❌' : current === 1 ? '⭕️' : ''
+        tip.innerText = `${which}赢了！`
+        return true
+      }
+    }
+    function willWin(current, cellsList) {
+      for (let i = 0, len = cellsList.length; i < len; i++) {
+        for (let j = 0, len = cellsList[i].length; j < len; j++) {
+          if (cellsList[i][j] !== 0) {
+            continue
+          }
+          let tmp = cloneList(cellsList)
+          tmp[i][j] = current
+          if (check(i, j, current, tmp)) {
+            return [i, j]
+          }
+        }
+      }
+      return null
+    }
+
+    function bastChoice(current, cellsList) {
+      let p;
+      // 先看看当前落子，是否能赢
+      if (p = willWin(current, cellsList)) {
+        return {point: p, result: 1} // 1赢，0，和，-1输
+      }
+      // 如果不能赢，那么找到对自己最有利的落子点，并返回
+      let result = -2
+      let point = null
+      for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 3; j++) { // 已落子的地方跳过
+          if (cellsList[i][j]) {
+            continue
+          }
+          let tmp = cloneList(cellsList)
+          tmp[i][j] = current
+
+          // 对方的最好选择
+          let r = bastChoice(COUNT - current, tmp).result
+          if (- r > result) {
+            result = - r
+            point = [i, j]
+          }
+        }
+      }
+      return {
+        result: point ? result : 0,
+        point
+      }
+    }
+    // 深拷贝数组
+    function cloneList(cellsList) {
+      return JSON.parse(JSON.stringify(cellsList))
+    }
+    // 渲染棋盘
+    function show() {
+      const boxId = document.getElementById('box-wrap')
+      // 移除事件
+      removeLisenter()
+      // 清空棋盘
+      boxId.innerHTML = ''
+      let fragment = document.createDocumentFragment()
+      for (let i = 0, len = cellsList.length; i < len; i++) {
+        for (let j = 0, len = cellsList[i].length; j < len; j++) {
+          let cell = document.createElement('div')
+          cell.classList.add('cell')
+          cell.innerText = cellsList[i][j] === 2 ? '❌' : cellsList[i][j] === 1 ? '⭕️' : ''
+
+          // cell.addEventListener('click', () => move(i, j))
+          cell.addEventListener('click', move.bind(this, i, j))
+          fragment.appendChild(cell)
+        }
+        // 批量添加div，提高性能
+        fragment.appendChild(document.createElement('br'))
+      }
+      boxId.appendChild(fragment)
+    }
+
+    // 清空棋盘前，释放监听的事件
+    function removeLisenter() {
+      const boxId = document.getElementById('box-wrap')
+      if (Array.isArray(boxId.children)) {
+        boxId.children.forEach(item => {
+          if (item.className === 'cell') {
+            item.removeEventListener('click', move)
+          }
+        })
+      }
+    }
+    // 检查当前落子后，是否胜利
+    function check(i, j, current, cellsList) {
+      { // 同行检查
+        let win = true;
+        for (let x = 0, len = cellsList[i].length; x < len; x++) {
+          if (cellsList[i][x] !== current) {
+            win = false
+            break
+          }
+        }
+        if (win) {
+          return true
+        }
+      };
+      { // 同列检查
+        let win = true;
+        for (let y = 0, len = cellsList.length; y < len; y++) {
+          if (cellsList[y][j] !== current) {
+            win = false
+            break
+          }
+        }
+        if (win) {
+          return true
+        }
+      };
+      { // 左对角检查
+        let win = true;
+        for (let y = 0, len = cellsList.length; y < len; y++) {
+          if (cellsList[y][y] !== current) {
+            win = false
+            break
+          }
+        }
+        if (win) {
+          return true
+        }
+      };
+      { // 右对角检查
+        let win = true;
+        for (let y = 0, len = cellsList.length; y < len; y++) {
+          if (cellsList[y][2 - y] !== current) {
+            win = false
+            break
+          }
+        }
+        if (win) {
+          return true
+        }
+      };
+      return false
+    }
+
+    show(cellsList)
+  </script>
+</html>
