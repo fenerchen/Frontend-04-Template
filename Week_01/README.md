@@ -40,3 +40,11 @@
 > 2、二维数组拷贝 `JSON.parse(JSON.stringify(cellsList))`
 
 > 3、一维数组，减小开销的拷贝 `Object.create(cellsList)`
+
+## 三、事件最多执行 1 次的使用
+
+`target.addEventListener(type, listener, {once:true});`
+
+> once: Boolean，表示 listener 在添加之后最多只调用一次。如果是 true， listener 会在其被调用之后自动移除。
+
+使用 once 就无须手动添加事件移除了，不用为内存泄漏而担忧了。
