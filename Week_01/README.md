@@ -26,7 +26,8 @@
 
 ### 1、退出两层循环
 
-```outer:for(){
+```
+outer:for(){
   for(){
     break outer
   }
