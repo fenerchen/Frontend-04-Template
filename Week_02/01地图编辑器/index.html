@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <style>
+      .cell {
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        line-height: 7px;
+        background-color: #f5f5f5;
+        border-width: 0 1px 1px 0;
+        border-color: white;
+        border-style: solid;
+        vertical-align: top;
+      }
+      #map {
+        width: 701px;
+        font-size: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+      <div id="map"></div>
+      <button id='save'>save</button>
+    </div>
+  </body>
+  <script>
+    document.getElementById('save').addEventListener('click', () => {
+      console.log(1111, map)
+      localStorage.setItem('map', JSON.stringify(map))
+    })
+    let map = localStorage.getItem('map')
+    map = map ? JSON.parse(map) : Array(10000).fill(0)
+
+    // 绘制地图底版
+    function drawMap() {
+      const mapBox = document.getElementById('map')
+      let fragment = document.createDocumentFragment()
+      for (let x = 0; x < 100; x++) {
+        for (let y = 0; y < 100; y++) {
+          let cell = document.createElement('div')
+          cell.addEventListener('mousemove', () => {
+            if (isMouseDown) {
+              cell.style.background = clear ? 'f5f5f5' : '#000'
+              map[x * 100 + y] = clear ? 0 : 1
+            }
+
+          })
+          cell.classList.add('cell')
+          if (map[x * 100 + y] === 1) {
+            cell.style.background = '#000'
+          }
+          fragment.appendChild(cell)
+        }
+      }
+      mapBox.appendChild(fragment)
+    }
+    let isMouseDown = false
+    let clear = false
+    document.addEventListener('mousedown', e => {
+      isMouseDown = true
+      clear = (e.which === 3)
+      console.log('clear', clear, e, e.witch)
+    })
+    document.addEventListener('mouseup', e => {
+      isMouseDown = false
+    })
+    document.addEventListener('contextmenu', e => {
+      e.preventDefault()
+    })
+    drawMap()
+  </script>
+</html>
