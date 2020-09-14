@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <style>
+      .cell {
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        line-height: 7px;
+        background-color: #f5f5f5;
+        border-width: 0 1px 1px 0;
+        border-color: white;
+        border-style: solid;
+        vertical-align: top;
+      }
+      #map {
+        width: 801px;
+        font-size: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+      <div id="map"></div>
+      <button id='save'>save</button>
+    </div>
+  </body>
+  <script>
+    document.getElementById('save').addEventListener('click', () => {
+      console.log(1111, map)
+      localStorage.setItem('map', JSON.stringify(map))
+    })
+    let map = localStorage.getItem('map')
+    map = map ? JSON.parse(map) : Array(10000).fill(0)
+    const mapBox = document.getElementById('map')
+
+    // 绘制地图底版
+    function drawMap() {
+      let fragment = document.createDocumentFragment()
+      for (let x = 0; x < 100; x++) {
+        for (let y = 0; y < 100; y++) {
+          let cell = document.createElement('div')
+          cell.addEventListener('mousemove', () => {
+            if (isMouseDown) {
+              cell.style.background = clear ? '#f5f5f5' : '#000'
+              map[x * 100 + y] = clear ? 0 : 1
+            }
+
+          })
+          cell.classList.add('cell')
+          if (map[x * 100 + y] === 1) {
+            cell.style.background = '#000'
+          }
+          fragment.appendChild(cell)
+        }
+      }
+      mapBox.appendChild(fragment)
+    }
+    let isMouseDown = false
+    let clear = false
+    document.addEventListener('mousedown', e => {
+      isMouseDown = true
+      clear = (e.which === 3)
+    })
+    document.addEventListener('mouseup', e => {
+      isMouseDown = false
+    })
+    // document.addEventListener('contextmenu', e => {
+    // e.preventDefault()
+    // })
+    drawMap()
+
+    function sleep(t) {
+      return new Promise((res) => {
+        setTimeout(res, t)
+      })
+    }
+    // 寻路，广度优先搜索,start[0,1]
+    const path = async (map, start, end) => {
+      let table = Object.create(map)
+
+      async function insert(x, y, pre) { // 遇到边界
+        if (x < 0 || x > 100 || y < 0 || y > 100) {
+          return
+        }
+        // 已经有墙或走过
+        if (map[x * 100 + y]) {
+          return
+        }
+        try {
+          await sleep(30)
+          mapBox.children[x * 100 + y].style.background = 'green'
+          map[x * 100 + y] = 2 // 走过标记
+          queue.push([x, y]) // 加入队尾
+
+          table[x * 100 + y] = pre // 记录改点的前驱点
+        } catch (err) {
+          console.log(err)
+        }
+
+      }
+
+      let queue = [start]
+      while (queue.length) { // 队头取值
+        let [x, y] = queue.shift()
+        // 找到终点
+        if (x === end[0] && y === end[1]) {
+          let p = []
+          while (x !== start[0] && y !== start[1]) {
+            p.push(map[x * 100 + y])
+            await sleep(3)
+
+            mapBox.children[x * 100 + y].style.background = 'red'
+            [x, y] = table[x * 100 + y]
+          }
+          console.log(11)
+          return p
+
+
+        }
+        try { // 临近位置入队
+          await insert(x - 1, y, [x, y])
+          await insert(x, y - 1, [x, y])
+          await insert(x + 1, y, [x, y])
+          await insert(x, y + 1, [x, y])
+
+          await insert(x - 1, y - 1, [x, y])
+          await insert(x - 1, y + 1, [x, y])
+          await insert(x + 1, y - 1, [x, y])
+          await insert(x + 1, y + 1, [x, y])
+        } catch (err) {}
+      }
+      return false
+    }
+  </script>
+</html>

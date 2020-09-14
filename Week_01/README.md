@@ -40,7 +40,7 @@ outer:for(){
 
 > 2、二维数组拷贝 `JSON.parse(JSON.stringify(cellsList))`
 
-> 3、一维数组，减小开销的拷贝 `Object.create(cellsList)`
+> 3、一维数组，减小开销的拷贝 `Object.create(cellsList)`，一级深拷贝
 
 ## 三、事件最多执行 1 次的使用
 
